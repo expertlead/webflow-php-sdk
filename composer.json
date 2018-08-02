@@ -1,0 +1,16 @@
+{
+    "name": "expertlead/webflow-php-sdk",
+    "description": "PHP SDK for the Webflow CMS API",
+    "type": "library",
+    "require": {
+        "guzzlehttp/guzzle": "^5"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Oleksii Antypov",
+            "email": "echo@wivern.co.uk"
+        }
+    ],
+    "minimum-stability": "stable"
+}
