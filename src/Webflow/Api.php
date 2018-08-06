@@ -12,6 +12,12 @@ class Api {
   private $client;
   private $token;
 
+  private $requests;
+  private $start;
+  private $finish;
+
+  private $cache = [];
+
   function __construct(
       $token,
       $version = '1.0.0'
@@ -23,10 +29,17 @@ class Api {
       $this->token = $token;
       $this->version = $version;
 
+      $this->rateRemaining = 60;
+
       return $this;
   }
 
   private function request(string $path, string $method, array $data = []) {
+    if ($this->rateRemaining <= 1) {
+      $sec = 60 + 30;
+      // echo "Sleeping {$sec}s, X-RateLimit-Remaining: {$this->rateRemaining}", PHP_EOL;
+      sleep($sec);
+    }
     $curl = curl_init();
     $options = [
         CURLOPT_URL => self::WEBFLOW_API_ENDPOINT . $path,
@@ -38,6 +51,7 @@ class Api {
           "Accept: application/json",
           "Content-Type: application/json",
         ],
+        CURLOPT_HEADER => true,
         CURLOPT_RETURNTRANSFER => true,
     ];
     if (!empty($data)) {
@@ -48,7 +62,21 @@ class Api {
     curl_setopt_array($curl, $options);
     $response = curl_exec($curl);
     curl_close($curl);
-    return $this->parse($response);
+    list($headers, $body) = explode("\r\n\r\n", $response, 2);
+    $headers = explode(PHP_EOL, $headers);
+    foreach($headers as $header) {
+      if (strpos($header, ': ') > 0) {
+        list($headerName, $headerValue) = explode(': ', $header, 2);
+        if ($headerName == 'X-RateLimit-Limit') {
+          $rateLimit = $headerValue;
+        }
+        if ($headerName == 'X-RateLimit-Remaining') {
+          $rateRemaining = intval($headerValue);
+        }
+      }
+    }
+    $this->rateRemaining = $rateRemaining ?? $this->rateRemaining - 1;
+    return $this->parse($body);
 
   }
   private function get($path) {
@@ -68,7 +96,15 @@ class Api {
   }
 
   private function parse($response) {
-    return json_decode($response);
+    $json = json_decode($response);
+    if (isset($json->code) && isset($json->msg)) {
+      $error = $json->msg;
+      if (isset($json->problems)) {
+        $error .= PHP_EOL . implode(PHP_EOL, $json->problems);
+      }
+      throw new \Exception($error, $json->code);
+    }
+    return $json;
   }
   // Meta
 
@@ -130,4 +166,34 @@ class Api {
     return $this->delete("/collections/{$collectionId}/items/{$itemId}");
   }
 
+  public function findOrCreateItemByName(string $collectionId, array $fields) {
+    if (!isset($fields['name'])) {
+      throw new WebflowException('name');
+    }
+    $cacheKey = "collection-{$collectionId}-items";
+    $instance = $this;
+    $items = $this->cache($cacheKey, function () use ($instance, $collectionId) {
+      return $instance->items($collectionId)->items;
+    });
+    foreach ($items as $item) {
+      if (strcasecmp($item->name, $fields['name']) === 0) {
+        return $item;
+      }
+    }
+    $newItem = $this->createItem($collectionId, $fields);
+    $items[] = $newItem;
+    $this->cacheSet($cacheKey, $items);
+    return $newItem;
+  }
+
+  private function cache($key, callable $callback) {
+    if (!isset($this->cache[$key])) {
+      $this->cache[$key] = $callback();
+    }
+    return $this->cache[$key];
+  }
+
+  private function cacheSet($key, $value) {
+    $this->cache[$key] = $value;
+  }
 }
