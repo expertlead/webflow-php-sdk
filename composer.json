@@ -1,16 +1,21 @@
 {
-    "name": "expertlead/webflow-php-sdk",
-    "description": "PHP SDK for the Webflow CMS API",
-    "type": "library",
-    "require": {
-      "ext-curl": "*"
-    },
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Oleksii Antypov",
-            "email": "echo@wivern.co.uk"
-        }
-    ],
-    "minimum-stability": "stable"
+  "name": "expertlead/webflow-php-sdk",
+  "description": "PHP SDK for the Webflow CMS API",
+  "type": "library",
+  "require": {
+    "ext-curl": "*"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Oleksii Antypov",
+      "email": "echo@wivern.co.uk"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Webflow\\": "src/"
+    }
+  },
+  "minimum-stability": "stable"
 }
