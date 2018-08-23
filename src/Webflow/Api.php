@@ -35,11 +35,6 @@ class Api {
   }
 
   private function request(string $path, string $method, array $data = []) {
-    if ($this->rateRemaining <= 1) {
-      $sec = 60 + 30;
-      // echo "Sleeping {$sec}s, X-RateLimit-Remaining: {$this->rateRemaining}", PHP_EOL;
-      sleep($sec);
-    }
     $curl = curl_init();
     $options = [
         CURLOPT_URL => self::WEBFLOW_API_ENDPOINT . $path,
@@ -62,20 +57,6 @@ class Api {
     curl_setopt_array($curl, $options);
     $response = curl_exec($curl);
     curl_close($curl);
-    list($headers, $body) = explode("\r\n\r\n", $response, 2);
-    $headers = explode(PHP_EOL, $headers);
-    foreach($headers as $header) {
-      if (strpos($header, ': ') > 0) {
-        list($headerName, $headerValue) = explode(': ', $header, 2);
-        if ($headerName == 'X-RateLimit-Limit') {
-          $rateLimit = $headerValue;
-        }
-        if ($headerName == 'X-RateLimit-Remaining') {
-          $rateRemaining = intval($headerValue);
-        }
-      }
-    }
-    $this->rateRemaining = $rateRemaining ?? $this->rateRemaining - 1;
     return $this->parse($body);
 
   }
@@ -140,8 +121,25 @@ class Api {
 
   // Items
 
-  public function items(string $collectionId) {
-    return $this->get("/collections/{$collectionId}/items");
+  public function items(string $collectionId, int $offset = 0, int $limit = 100) {
+    $query = http_build_query([
+      'offset' => $offset,
+      'limit' => $limit,
+    ]);
+    return $this->get("/collections/{$collectionId}/items?{$query}");
+  }
+
+  public function itemsAll(string $collectionId): array {
+    $response = $this->items($collectionId);
+    $items = $response->items;
+    $limit = $response->limit;
+    $total = $response->total;
+    $pages = ceil($total / $limit);
+    for ($page = 1; $page < $pages; $page++){
+      $offset = $response->limit * $page;
+      $items = array_merge($items, $this->items($collectionId, $offset, $limit)->items);
+    }
+    return $items;
   }
 
   public function item(string $collectionId, string $itemId) {
@@ -173,7 +171,7 @@ class Api {
     $cacheKey = "collection-{$collectionId}-items";
     $instance = $this;
     $items = $this->cache($cacheKey, function () use ($instance, $collectionId) {
-      return $instance->items($collectionId)->items;
+      return $instance->itemsAll($collectionId);
     });
     foreach ($items as $item) {
       if (strcasecmp($item->name, $fields['name']) === 0) {
