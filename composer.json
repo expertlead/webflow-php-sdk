@@ -3,6 +3,7 @@
     "description": "PHP SDK for the Webflow CMS API",
     "type": "library",
     "require": {
+      "ext-curl": "*"
     },
     "license": "MIT",
     "authors": [
