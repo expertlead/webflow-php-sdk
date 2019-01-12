@@ -1,4 +1,7 @@
 # PHP SDK for the Webflow CMS API
+
+[![Build Status](https://travis-ci.com/wivern-co-uk/webflow-php-sdk.svg?branch=master)](https://travis-ci.com/wivern-co-uk/webflow-php-sdk)
+
 Implementation based on [Webflow CMS API Reference](https://developers.webflow.com/#cms-api-reference)
 
 ## Features implemented
@@ -73,4 +76,3 @@ $webflow->removeItem($collectionId, $itemId);
 composer require expertlead/webflow-php-sdk
 ```
 No extra dependencies! You are welcome ;)
-
