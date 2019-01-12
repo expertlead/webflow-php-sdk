@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<ruleset name="Webflow PHP SDK">
+  <arg name="extensions" value="php"/>
+  <file>.</file>
+  <exclude-pattern>*/vendor/*</exclude-pattern>
+  <rule ref="PSR12">
+  </rule>
+</ruleset>

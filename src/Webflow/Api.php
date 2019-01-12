@@ -4,39 +4,40 @@ namespace Webflow;
 
 use Webflow\WebflowException;
 
-class Api {
+class Api
+{
+    const WEBFLOW_API_ENDPOINT = 'https://api.webflow.com';
+    const WEBFLOW_API_USERAGENT = 'Expertlead Webflow PHP SDK (https://github.com/expertlead/webflow-php-sdk)';
 
-  const WEBFLOW_API_ENDPOINT = 'https://api.webflow.com';
-  const WEBFLOW_API_USERAGENT = 'ExpertLead Webflow PHP SDK (https://github.com/expertlead/webflow-php-sdk)';
+    private $client;
+    private $token;
 
-  private $client;
-  private $token;
+    private $requests;
+    private $start;
+    private $finish;
 
-  private $requests;
-  private $start;
-  private $finish;
+    private $cache = [];
 
-  private $cache = [];
+    public function __construct(
+        $token,
+        $version = '1.0.0'
+    ) {
+        if (empty($token)) {
+            throw new WebflowException('token');
+        }
 
-  function __construct(
-      $token,
-      $version = '1.0.0'
-  ) {
-      if (empty($token)) {
-        throw new WebflowException('token');
-      }
+        $this->token = $token;
+        $this->version = $version;
 
-      $this->token = $token;
-      $this->version = $version;
+        $this->rateRemaining = 60;
 
-      $this->rateRemaining = 60;
+        return $this;
+    }
 
-      return $this;
-  }
-
-  private function request(string $path, string $method, array $data = []) {
-    $curl = curl_init();
-    $options = [
+    private function request(string $path, string $method, array $data = [])
+    {
+        $curl = curl_init();
+        $options = [
         CURLOPT_URL => self::WEBFLOW_API_ENDPOINT . $path,
         CURLOPT_CUSTOMREQUEST => $method,
         CURLOPT_USERAGENT => self::WEBFLOW_API_USERAGENT,
@@ -48,151 +49,169 @@ class Api {
         ],
         CURLOPT_HEADER => true,
         CURLOPT_RETURNTRANSFER => true,
-    ];
-    if (!empty($data)) {
-        $json = json_encode($data);
-        $options[CURLOPT_POSTFIELDS] = $json;
-        $options[CURLOPT_HTTPHEADER][] = "Content-Length: " . strlen($json);
+        ];
+        if (!empty($data)) {
+            $json = json_encode($data);
+            $options[CURLOPT_POSTFIELDS] = $json;
+            $options[CURLOPT_HTTPHEADER][] = "Content-Length: " . strlen($json);
+        }
+        curl_setopt_array($curl, $options);
+        $response = curl_exec($curl);
+        curl_close($curl);
+        list($headers, $body) = explode("\r\n\r\n", $response, 2);
+        return $this->parse($body);
     }
-    curl_setopt_array($curl, $options);
-    $response = curl_exec($curl);
-    curl_close($curl);
-    list($headers, $body) = explode("\r\n\r\n", $response, 2);
-    return $this->parse($body);
-
-  }
-  private function get($path) {
-    return $this->request($path, "GET");
-  }
-
-  private function post($path, $data) {
-    return $this->request($path, "POST", $data);
-  }
-
-  private function put($path, $data) {
-    return $this->request($path, "PUT", $data);
-  }
-
-  private function delete($path, $data) {
-    return $this->request($path, "DELETE", $data);
-  }
-
-  private function parse($response) {
-    $json = json_decode($response);
-    if (isset($json->code) && isset($json->msg)) {
-      $error = $json->msg;
-      if (isset($json->problems)) {
-        $error .= PHP_EOL . implode(PHP_EOL, $json->problems);
-      }
-      throw new \Exception($error, $json->code);
+    private function get($path)
+    {
+        return $this->request($path, "GET");
     }
-    return $json;
-  }
-  // Meta
 
-  public function info() {
-    return $this->get('/info');
-  }
-
-  public function sites() {
-    return $this->get('/sites');
-  }
-
-  public function site(string $siteId) {
-    return $this->get("/sites/{$siteId}");
-  }
-
-  public function domains(string $siteId) {
-    return $this->get("/sites/{$siteId}/domains");
-  }
-
-  public function publishSite(string $siteId, array $domains) {
-    return $this->post(`/sites/${siteId}/publish`, $domains);
-  }
-
-  // Collections
-
-  public function collections(string $siteId) {
-    return $this->get("/sites/{$siteId}/collections");
-  }
-
-  public function collection(string $collectionId) {
-    return $this->get("/collections/{$collectionId}");
-  }
-
-  // Items
-
-  public function items(string $collectionId, int $offset = 0, int $limit = 100) {
-    $query = http_build_query([
-      'offset' => $offset,
-      'limit' => $limit,
-    ]);
-    return $this->get("/collections/{$collectionId}/items?{$query}");
-  }
-
-  public function itemsAll(string $collectionId): array {
-    $response = $this->items($collectionId);
-    $items = $response->items;
-    $limit = $response->limit;
-    $total = $response->total;
-    $pages = ceil($total / $limit);
-    for ($page = 1; $page < $pages; $page++){
-      $offset = $response->limit * $page;
-      $items = array_merge($items, $this->items($collectionId, $offset, $limit)->items);
+    private function post($path, $data)
+    {
+        return $this->request($path, "POST", $data);
     }
-    return $items;
-  }
 
-  public function item(string $collectionId, string $itemId) {
-    return $this->get("/collections/{$collectionId}/items/{$itemId}");
-  }
-
-  public function createItem(string $collectionId, array $fields) {
-    $defaults = [
-      "_archived" => false,
-      "_draft" => false,
-    ];
-    return $this->post("/collections/{$collectionId}/items", [
-        'fields' => $defaults + $fields,
-    ]);
-  }
-
-  public function updateItem(string $collectionId, string $itemId, array $fields) {
-    return $this->put("/collections/{$collectionId}/items/{$itemId}", $fields);
-  }
-
-  public function removeItem(string $collectionId, $itemId) {
-    return $this->delete("/collections/{$collectionId}/items/{$itemId}");
-  }
-
-  public function findOrCreateItemByName(string $collectionId, array $fields) {
-    if (!isset($fields['name'])) {
-      throw new WebflowException('name');
+    private function put($path, $data)
+    {
+        return $this->request($path, "PUT", $data);
     }
-    $cacheKey = "collection-{$collectionId}-items";
-    $instance = $this;
-    $items = $this->cache($cacheKey, function () use ($instance, $collectionId) {
-      return $instance->itemsAll($collectionId);
-    });
-    foreach ($items as $item) {
-      if (strcasecmp($item->name, $fields['name']) === 0) {
-        return $item;
-      }
-    }
-    $newItem = $this->createItem($collectionId, $fields);
-    $items[] = $newItem;
-    $this->cacheSet($cacheKey, $items);
-    return $newItem;
-  }
 
-  private function cache($key, callable $callback) {
-    if (!isset($this->cache[$key])) {
-      $this->cache[$key] = $callback();
+    private function delete($path, $data)
+    {
+        return $this->request($path, "DELETE", $data);
     }
-    return $this->cache[$key];
-  }
 
-  private function cacheSet($key, $value) {
-    $this->cache[$key] = $value;
-  }
+    private function parse($response)
+    {
+        $json = json_decode($response);
+        if (isset($json->code) && isset($json->msg)) {
+            $error = $json->msg;
+            if (isset($json->problems)) {
+                $error .= PHP_EOL . implode(PHP_EOL, $json->problems);
+            }
+            throw new \Exception($error, $json->code);
+        }
+        return $json;
+    }
+
+    // Meta
+    public function info()
+    {
+        return $this->get('/info');
+    }
+
+    public function sites()
+    {
+        return $this->get('/sites');
+    }
+
+    public function site(string $siteId)
+    {
+        return $this->get("/sites/{$siteId}");
+    }
+
+    public function domains(string $siteId)
+    {
+        return $this->get("/sites/{$siteId}/domains");
+    }
+
+    public function publishSite(string $siteId, array $domains)
+    {
+        return $this->post("/sites/${siteId}/publish", $domains);
+    }
+
+    // Collections
+    public function collections(string $siteId)
+    {
+        return $this->get("/sites/{$siteId}/collections");
+    }
+
+    public function collection(string $collectionId)
+    {
+        return $this->get("/collections/{$collectionId}");
+    }
+
+    // Items
+    public function items(string $collectionId, int $offset = 0, int $limit = 100)
+    {
+        $query = http_build_query([
+        'offset' => $offset,
+        'limit' => $limit,
+        ]);
+        return $this->get("/collections/{$collectionId}/items?{$query}");
+    }
+
+    public function itemsAll(string $collectionId): array
+    {
+        $response = $this->items($collectionId);
+        $items = $response->items;
+        $limit = $response->limit;
+        $total = $response->total;
+        $pages = ceil($total / $limit);
+        for ($page = 1; $page < $pages; $page++) {
+            $offset = $response->limit * $page;
+            $items = array_merge($items, $this->items($collectionId, $offset, $limit)->items);
+        }
+        return $items;
+    }
+
+    public function item(string $collectionId, string $itemId)
+    {
+        return $this->get("/collections/{$collectionId}/items/{$itemId}");
+    }
+
+    public function createItem(string $collectionId, array $fields)
+    {
+        $defaults = [
+        "_archived" => false,
+        "_draft" => false,
+        ];
+        return $this->post("/collections/{$collectionId}/items", [
+          'fields' => $defaults + $fields,
+        ]);
+    }
+
+    public function updateItem(string $collectionId, string $itemId, array $fields)
+    {
+        return $this->put("/collections/{$collectionId}/items/{$itemId}", $fields);
+    }
+
+    public function removeItem(string $collectionId, $itemId)
+    {
+        return $this->delete("/collections/{$collectionId}/items/{$itemId}");
+    }
+
+    public function findOrCreateItemByName(string $collectionId, array $fields)
+    {
+        if (!isset($fields['name'])) {
+            throw new WebflowException('name');
+        }
+        $cacheKey = "collection-{$collectionId}-items";
+        $instance = $this;
+        $items = $this->cache($cacheKey, function () use ($instance, $collectionId) {
+            return $instance->itemsAll($collectionId);
+        });
+        foreach ($items as $item) {
+            if (strcasecmp($item->name, $fields['name']) === 0) {
+                return $item;
+            }
+        }
+        $newItem = $this->createItem($collectionId, $fields);
+        $items[] = $newItem;
+        $this->cacheSet($cacheKey, $items);
+        return $newItem;
+    }
+
+    private function cache($key, callable $callback)
+    {
+        if (!isset($this->cache[$key])) {
+            $this->cache[$key] = $callback();
+        }
+        return $this->cache[$key];
+    }
+
+    private function cacheSet($key, $value)
+    {
+        $this->cache[$key] = $value;
+    }
 }
