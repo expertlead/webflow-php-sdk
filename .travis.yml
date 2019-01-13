@@ -1,0 +1,25 @@
+sudo: false
+language: php
+dist: trusty
+
+cache:
+  directories:
+    - $HOME/.composer/cache/files
+
+matrix:
+  include:
+    - php: 7.0
+    - php: 7.1
+    - php: 7.2
+    - php: 7.3
+    - php: nightly
+
+  allow_failures:
+    - php: nightly
+
+install:
+  - composer install
+
+script:
+  - ./vendor/bin/phpcs -v
+  - ./vendor/bin/phpunit --bootstrap vendor/autoload.php tests/
