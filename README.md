@@ -1,6 +1,6 @@
 # PHP SDK for the Webflow CMS API
 
-[![Build Status](https://travis-ci.com/wivern-co-uk/webflow-php-sdk.svg?branch=master)](https://travis-ci.com/wivern-co-uk/webflow-php-sdk)
+[![Build Status](https://travis-ci.com/expertlead/webflow-php-sdk.svg?branch=master)](https://travis-ci.com/expertlead/webflow-php-sdk)
 
 Implementation based on [Webflow CMS API Reference](https://developers.webflow.com/#cms-api-reference)
 
