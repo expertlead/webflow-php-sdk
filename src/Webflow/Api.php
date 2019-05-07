@@ -174,7 +174,9 @@ class Api
 
     public function updateItem(string $collectionId, string $itemId, array $fields)
     {
-        return $this->put("/collections/{$collectionId}/items/{$itemId}", $fields);
+        return $this->put("/collections/{$collectionId}/items/{$itemId}", [
+            'fields' => $fields,
+        ]);
     }
 
     public function removeItem(string $collectionId, $itemId)
