@@ -163,11 +163,12 @@ class Api
     public function createItem(string $collectionId, array $fields)
     {
         $defaults = [
-        "_archived" => false,
-        "_draft" => false,
+            "_archived" => false,
+            "_draft" => false,
         ];
+
         return $this->post("/collections/{$collectionId}/items", [
-          'fields' => $defaults + $fields,
+          'fields' => array_merge($defaults, $fields),
         ]);
     }
 
