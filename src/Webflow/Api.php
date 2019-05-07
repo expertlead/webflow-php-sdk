@@ -76,9 +76,9 @@ class Api
         return $this->request($path, "PUT", $data);
     }
 
-    private function delete($path, $data)
+    private function delete($path)
     {
-        return $this->request($path, "DELETE", $data);
+        return $this->request($path, "DELETE");
     }
 
     private function parse($response)
