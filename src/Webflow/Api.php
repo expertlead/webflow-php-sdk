@@ -76,9 +76,9 @@ class Api
         return $this->request($path, "PUT", $data);
     }
 
-    private function delete($path, $data)
+    private function delete($path)
     {
-        return $this->request($path, "DELETE", $data);
+        return $this->request($path, "DELETE");
     }
 
     private function parse($response)
@@ -163,17 +163,20 @@ class Api
     public function createItem(string $collectionId, array $fields)
     {
         $defaults = [
-        "_archived" => false,
-        "_draft" => false,
+            "_archived" => false,
+            "_draft" => false,
         ];
+
         return $this->post("/collections/{$collectionId}/items", [
-          'fields' => $defaults + $fields,
+          'fields' => array_merge($defaults, $fields),
         ]);
     }
 
     public function updateItem(string $collectionId, string $itemId, array $fields)
     {
-        return $this->put("/collections/{$collectionId}/items/{$itemId}", $fields);
+        return $this->put("/collections/{$collectionId}/items/{$itemId}", [
+            'fields' => $fields,
+        ]);
     }
 
     public function removeItem(string $collectionId, $itemId)
