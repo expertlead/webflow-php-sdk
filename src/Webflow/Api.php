@@ -117,7 +117,9 @@ class Api
 
     public function publishSite(string $siteId, array $domains)
     {
-        return $this->post("/sites/${siteId}/publish", $domains);
+        return $this->post("/sites/${siteId}/publish", [
+            'domains' => $domains
+        ]);
     }
 
     // Collections
