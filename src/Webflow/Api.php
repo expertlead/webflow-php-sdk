@@ -210,6 +210,32 @@ class Api
         $this->cacheSet($cacheKey, $items);
         return $newItem;
     }
+   
+    public function createOrUpdateItemByName(string $collectionId, array $fields)
+    {
+        if (!isset($fields['name'])) {
+            throw new WebflowException('name');
+        }
+        $cacheKey = "collection-{$collectionId}-items";
+        $instance = $this;
+        $items = $this->cache($cacheKey, function () use ($instance, $collectionId) {
+            return $instance->itemsAll($collectionId);
+        });
+        foreach ($items as $item) {
+            if (strcasecmp($item->name, $fields['name']) === 0) {
+                
+                //Update existing item
+                $this->updateItem($collectionId, $item->id, $fields);
+                return $item;
+            }
+        }
+        
+        //Create a new item
+        $newItem = $this->createItem($collectionId, $fields);
+        $items[] = $newItem;
+        $this->cacheSet($cacheKey, $items);
+        return $newItem;
+    }
 
     private function cache($key, callable $callback)
     {
