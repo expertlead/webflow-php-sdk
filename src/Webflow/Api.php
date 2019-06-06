@@ -223,9 +223,14 @@ class Api
         });
         foreach ($items as $item) {
             if (strcasecmp($item->name, $fields['name']) === 0) {
-                
+
+                //Add required fields
+                if(!array_key_exists('slug', $fields)){
+                    $fields['slug'] = $item->slug;
+                }
+
                 //Update existing item
-                $this->updateItem($collectionId, $item->id, $fields);
+                $this->updateItem($collectionId, $item->_id, $fields);
                 return $item;
             }
         }
@@ -236,6 +241,7 @@ class Api
         $this->cacheSet($cacheKey, $items);
         return $newItem;
     }
+
 
     private function cache($key, callable $callback)
     {
