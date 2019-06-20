@@ -219,6 +219,10 @@ class Api
         
         $items = $this->itemsAll($collectionId);
         
+        if(count($items) == 0){
+             throw new WebflowException('No items found');
+        }
+        
         foreach ($items as $item) {
             if (strcasecmp($item->name, $fields['name']) === 0) {
 
