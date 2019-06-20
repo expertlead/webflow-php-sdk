@@ -216,11 +216,7 @@ class Api
         if (!isset($fields['name'])) {
             throw new WebflowException('name');
         }
-        $cacheKey = "collection-{$collectionId}-items";
-        $instance = $this;
-        $items = $this->cache($cacheKey, function () use ($instance, $collectionId) {
-            return $instance->itemsAll($collectionId);
-        });
+    
         foreach ($items as $item) {
             if (strcasecmp($item->name, $fields['name']) === 0) {
 
@@ -237,8 +233,7 @@ class Api
         
         //Create a new item
         $newItem = $this->createItem($collectionId, $fields);
-        $items[] = $newItem;
-        $this->cacheSet($cacheKey, $items);
+
         return $newItem;
     }
 
