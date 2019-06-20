@@ -216,7 +216,9 @@ class Api
         if (!isset($fields['name'])) {
             throw new WebflowException('name');
         }
-    
+        
+        $items = $this->itemsAll($collectionId);
+        
         foreach ($items as $item) {
             if (strcasecmp($item->name, $fields['name']) === 0) {
 
