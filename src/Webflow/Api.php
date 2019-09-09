@@ -167,14 +167,14 @@ class Api
             "_draft" => false,
         ];
 
-        return $this->post("/collections/{$collectionId}/items" . ($live ? "?live=true": ""), [
+        return $this->post("/collections/{$collectionId}/items" . ($live ? "?live=true" : ""), [
             'fields' => array_merge($defaults, $fields),
         ]);
     }
 
     public function updateItem(string $collectionId, string $itemId, array $fields, bool $live = false)
     {
-        return $this->put("/collections/{$collectionId}/items/{$itemId}" . ($live ? "?live=true": ""), [
+        return $this->put("/collections/{$collectionId}/items/{$itemId}" . ($live ? "?live=true" : ""), [
             'fields' => $fields,
         ]);
     }
