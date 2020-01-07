@@ -63,6 +63,11 @@ $webflow->createItem($collectionId, $fields);
 $webflow->updateItem($collectionId, $itemId, $fields);
 ```
 
+### Patch Collection Item
+```
+$webflow->patchItem($collectionId, $itemId, $fields);
+```
+
 ### Remove Collection Item
 ```
 $webflow->removeItem($collectionId, $itemId);
