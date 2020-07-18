@@ -37,7 +37,7 @@ $webflow->sites();
 
 ### List Collections
 ```
-$webflow->collections();
+$webflow->collections($siteid);
 ```
 
 ### Get All Items for a Collection (including paginated results)
