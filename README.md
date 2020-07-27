@@ -35,6 +35,23 @@ $webflow->info();
 $webflow->sites();
 ```
 
+### Get Specific Site
+```
+$webflow->site($siteid);
+```
+
+### Publish Site
+```
+$webflow->publishSite($siteid,['domains' => ['mydomain.webflow.io', 'mycustomdomain.example.com']]);
+```
+
+### List Domains
+```
+$webflow->domains($siteid);
+```
+__If you only have a webflow.io domain this will return an empty array []__
+
+
 ### List Collections
 ```
 $webflow->collections($siteid);
@@ -67,6 +84,11 @@ $webflow->updateItem($collectionId, $itemId, $fields);
 ```
 $webflow->removeItem($collectionId, $itemId);
 ```
+
+Publish Your Site
+--
+
+
 
 
 ## Installation
