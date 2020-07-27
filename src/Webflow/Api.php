@@ -57,8 +57,12 @@ class Api
         }
         curl_setopt_array($curl, $options);
         $response = curl_exec($curl);
-        curl_close($curl);
+
         list($headers, $body) = explode("\r\n\r\n", $response, 2);
+
+        $body = mb_substr($response, curl_getinfo($curl, CURLINFO_HEADER_SIZE));
+        curl_close($curl);
+        
         return $this->parse($body);
     }
     private function get($path)
@@ -117,7 +121,9 @@ class Api
 
     public function publishSite(string $siteId, array $domains)
     {
-        return $this->post("/sites/${siteId}/publish", $domains);
+        return $this->post("/sites/${siteId}/publish", [
+            'domains' => $domains
+        ]);
     }
 
     // Collections
@@ -204,6 +210,39 @@ class Api
         $this->cacheSet($cacheKey, $items);
         return $newItem;
     }
+   
+    public function createOrUpdateItemByName(string $collectionId, array $fields)
+    {
+        if (!isset($fields['name'])) {
+            throw new WebflowException('name');
+        }
+        
+        $items = $this->itemsAll($collectionId);
+        
+        if(count($items) == 0){
+             throw new WebflowException('No items found');
+        }
+        
+        foreach ($items as $item) {
+            if (strcasecmp($item->name, $fields['name']) === 0) {
+
+                //Add required fields
+                if(!array_key_exists('slug', $fields)){
+                    $fields['slug'] = $item->slug;
+                }
+
+                //Update existing item
+                $this->updateItem($collectionId, $item->_id, $fields);
+                return $item;
+            }
+        }
+        
+        //Create a new item
+        $newItem = $this->createItem($collectionId, $fields);
+
+        return $newItem;
+    }
+
 
     private function cache($key, callable $callback)
     {
