@@ -76,6 +76,11 @@ class Api
         return $this->request($path, "PUT", $data);
     }
 
+    private function patch($path, $data)
+    {
+        return $this->request($path, "PATCH", $data);
+    }
+
     private function delete($path)
     {
         return $this->request($path, "DELETE");
@@ -175,6 +180,13 @@ class Api
     public function updateItem(string $collectionId, string $itemId, array $fields, bool $live = false)
     {
         return $this->put("/collections/{$collectionId}/items/{$itemId}" . ($live ? "?live=true" : ""), [
+            'fields' => $fields,
+        ]);
+    }
+
+    public function patchItem(string $collectionId, string $itemId, array $fields, bool $live = false)
+    {
+        return $this->patch("/collections/{$collectionId}/items/{$itemId}" . ($live ? "?live=true" : ""), [
             'fields' => $fields,
         ]);
     }
