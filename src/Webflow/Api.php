@@ -119,6 +119,54 @@ class Api
     {
         return $this->post("/sites/${siteId}/publish", $domains);
     }
+    
+    public function webhooks(string $siteId)
+    {
+        return $this->get("/sites/{$siteId}/webhooks");
+    }
+
+    public function webhook(string $siteId, string $webhookId)
+    {
+        return $this->get("/sites/{$siteId}/webhooks/{$webhookId}");
+    }
+
+    public function createWebhook(string $siteId, string $triggerType, string $url, ?string $filter = '')
+    {
+        $defaults = [
+            "triggerType" => "form_submission",
+            "url" => '',
+            "filter" => '',
+        ];
+
+        $triggerTypes = [
+            'form_submission',
+            'site_publish',
+            'ecomm_new_order',
+            'ecomm_order_changed',
+            'ecomm_inventory_changed',
+            'collection_item_created',
+            'collection_item_changed',
+            'collection_item_delete'
+        ];
+
+        if (!in_array($triggerType, $triggerTypes)) {
+            throw new \Exception(sprintf('Invalid trigger type \'%s\'. Possible values are [%s]',
+                $triggerType,
+                implode(',', $triggerTypes)
+            ));
+        }
+
+        return $this->post("/sites/{$siteId}/webhooks",  array_merge($defaults, [
+            'triggerType' => $triggerType,
+            'url' => $url,
+            'filter' => $filter
+        ]));
+    }
+
+    public function removeWebhook(string $siteId, string $webhookId)
+    {
+        return $this->delete("/sites/{$siteId}/webhooks/{$webhookId}");
+    }
 
     // Collections
     public function collections(string $siteId)
