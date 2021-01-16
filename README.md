@@ -85,6 +85,10 @@ Before changes go live, you must publish them to your domains.
 ```
 $webflow->publishSite($siteId,['domains' => ['mydomain.webflow.io', 'mycustomdomain.example.com']]);
 ```
+You can also simply pass a list of domains to the publishSite method
+````
+$webflow->publishSite($siteId,['mydomain.webflow.io', 'mycustomdomain.example.com']);
+````
 
 
 
