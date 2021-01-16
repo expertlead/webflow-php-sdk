@@ -37,12 +37,7 @@ $webflow->sites();
 
 ### Get Specific Site
 ```
-$webflow->site($siteid);
-```
-
-### Publish Site
-```
-$webflow->publishSite($siteid,['domains' => ['mydomain.webflow.io', 'mycustomdomain.example.com']]);
+$webflow->site($siteId);
 ```
 
 ### List Domains
@@ -85,9 +80,10 @@ $webflow->updateItem($collectionId, $itemId, $fields);
 $webflow->removeItem($collectionId, $itemId);
 ```
 
-Publish Your Site
---
-
+### Publish Site
+```
+$webflow->publishSite($siteId,['domains' => ['mydomain.webflow.io', 'mycustomdomain.example.com']]);
+```
 
 
 
