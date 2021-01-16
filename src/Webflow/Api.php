@@ -117,6 +117,9 @@ class Api
 
     public function publishSite(string $siteId, array $domains)
     {
+        if (!isset($domains['domains'])){
+            $domains = ['domains' => $domains];
+        }
         return $this->post("/sites/${siteId}/publish", $domains);
     }
 
