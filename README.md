@@ -81,6 +81,7 @@ $webflow->removeItem($collectionId, $itemId);
 ```
 
 ### Publish Site
+Before changes go live, you must publish them to your domains.
 ```
 $webflow->publishSite($siteId,['domains' => ['mydomain.webflow.io', 'mycustomdomain.example.com']]);
 ```
