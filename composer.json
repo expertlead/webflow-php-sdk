@@ -1,5 +1,5 @@
 {
-  "name": "expertlead/webflow-php-sdk",
+  "name": "ulovdomov/webflow-php-sdk",
   "description": "PHP SDK for the Webflow CMS API",
   "type": "library",
   "require": {
