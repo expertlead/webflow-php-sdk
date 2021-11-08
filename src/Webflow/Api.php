@@ -89,16 +89,15 @@ class Api
     private function parse($response)
     {
         $json = json_decode($response);
+        if($json===null) {
+            throw new \Exception('Empty webflow response: ' . $response);
+        }
         if (isset($json->code) && isset($json->msg)) {
             $error = $json->msg;
             if (isset($json->problems)) {
                 $error .= PHP_EOL . implode(PHP_EOL, $json->problems);
             }
             throw new \Exception($error, $json->code);
-        }
-
-        if(!isset($json->code)) {
-            throw new \Exception('Empty code in webflow response: ' . $response);
         }
 
         return $json;
