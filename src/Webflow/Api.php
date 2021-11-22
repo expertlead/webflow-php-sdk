@@ -58,6 +58,9 @@ class Api
         curl_setopt_array($curl, $options);
         $response = curl_exec($curl);
         curl_close($curl);
+		if ($response===false) {
+			throw new \Exception('Webflow: curl response failure');
+		}
 
         list($headers, $body) = explode("\r\n\r\n", $response, 2);
 		while (strpos($body, "\r\n\r\n") !== false) {
@@ -90,7 +93,7 @@ class Api
     {
         $json = json_decode($response);
         if($json===null) {
-            throw new \Exception('Empty webflow response: ' . $response);
+            throw new \Exception('Failed json decode: ' . $response);
         }
         if (isset($json->code) && isset($json->msg)) {
             $error = $json->msg;
